@@ -30,11 +30,8 @@ class Simulator:
         current_v = self.state[1]
 
         # Calculate new y
-        sigma_d = 0.1 * current_v
-        if sigma_d < 0:
-            d = np.random.normal(loc = 0.0, scale = -sigma_d)
-        else:
-            d = np.random.normal(loc = 0.0, scale = sigma_d)
+        sigma_d = 0.1 * np.abs(current_v)
+        d = np.random.normal(loc = 0.0, scale = sigma_d)
         new_y = current_y + current_v + d
 
         # Calculate new v, with potential crash
@@ -62,11 +59,8 @@ class Simulator:
     def calculate_observation(self):
         current_y = self.state[0]
         current_v = self.state[1]
-        sigma_n = 0.5 * current_v
-        if sigma_n < 0:
-            n = np.random.normal(loc = 0.0, scale = -sigma_n)
-        else:
-            n = np.random.normal(loc = 0.0, scale = sigma_n)
+        sigma_n = 0.5 * np.abs(current_v)
+        n = np.random.normal(loc = 0.0, scale = sigma_n)
         return current_y + n
 
     """
