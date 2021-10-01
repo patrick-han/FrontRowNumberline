@@ -1,4 +1,4 @@
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 import math
 import numpy as np
 
@@ -15,8 +15,8 @@ class Simulator:
         self.phi_dot = phi_dot_in
 
         # Crash constants -- dunno what these should be
-        self.p_c = 0.5
-        self.v_max = 3.0
+        self.p_c = 0.5 # ?
+        self.v_max = 3.0 # Max velocity
 
     """
     Args:
@@ -31,14 +31,15 @@ class Simulator:
 
         # Calculate new y
         sigma_d = 0.1 * current_v
-        d = np.random.normal(loc = 0.0, scale = sigma_d)
+        if sigma_d < 0:
+            d = np.random.normal(loc = 0.0, scale = -sigma_d)
+        else:
+            d = np.random.normal(loc = 0.0, scale = sigma_d)
         new_y = current_y + current_v + d
 
         # Calculate new v, with potential crash
         # Calculate probability and clamp to [0, 1)
         prob = np.clip((np.abs(current_v) - self.v_max) * self.p_c / self.v_max, 0.0, 1.0)
-        # print("Probability of crashing: {} (pre-clip)".format((np.abs(current_v) - self.v_max) * self.p_c / self.v_max))
-        # print("Probability of crashing: {}".format(prob))
         if np.random.rand() < prob:
             # Crashed!
             new_v = 0.0
@@ -62,8 +63,8 @@ class Simulator:
         current_y = self.state[0]
         current_v = self.state[1]
         sigma_n = 0.5 * current_v
-        if sigma_n == 0:
-            n = 0
+        if sigma_n < 0:
+            n = np.random.normal(loc = 0.0, scale = -sigma_n)
         else:
             n = np.random.normal(loc = 0.0, scale = sigma_n)
         return current_y + n
@@ -85,11 +86,33 @@ v = 0.0
 y = 0.0
 
 timestep = 0
+timestep_limit = 100 # How many timesteps to take?
 
 init_state = [y, v]
 my_sim = Simulator(init_state, phi_dot)
+
+states = []
+observations = []
 while(1):
+    if timestep == timestep_limit:
+        break
+
     my_sim.update_state(0.1)
-    print("Time: {}  |  Current state [y, v]: {}  |  Observation: {}".format(timestep, my_sim.get_state(), my_sim.calculate_observation()))
-    input()
+    my_state = my_sim.get_state()
+    my_observation = my_sim.calculate_observation()
+
+    my_state_copy = [my_state[0], my_state[1]] # Deep copy
+    states.append(my_state_copy)
+    observations.append(my_observation)
+
+    print("Time: {}  |  Current state [y, v]: {}  |  Observation: {}".format(timestep, my_state, my_observation))
+    # input()
     timestep += 1
+
+timesteps = list(range(len(states)))
+states = np.array(states)
+plt.plot(timesteps, states[:,0])
+plt.plot(timesteps, states[:,1])
+plt.plot(timesteps, observations)
+plt.legend(["y(t)", "v(v)", "observations"])
+plt.show()
